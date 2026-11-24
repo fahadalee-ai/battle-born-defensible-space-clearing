@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobile App Preview</title>
+  <title>Mobile App</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
   <style>
     :root {
       --bg: #0b0b0c;
@@ -44,14 +45,6 @@
     html,
     body {
       height: 100%;
-      overflow: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      display: none;
     }
 
     body {
@@ -150,8 +143,6 @@
       border: 0;
       display: block;
       background: #fff;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
   </style>
 </head>
@@ -280,19 +271,15 @@
   </div>
 
     <script>
-      const PRODUCTION_URL = "/";
+      // Local file open (the dev server for this app). Override anytime with ?url=
+      const LOCAL_DEV_URL = "http://127.0.0.1:8082/";
 
-    function defaultAppUrl() {
-      if (location.protocol === "file:") {
-        return "http://localhost:5173/";
+    function defaultPreviewUrl() {
+      // Served by the app or Vercel at /preview.html: show that same deployment.
+      if (location.protocol === "http:" || location.protocol === "https:") {
+        return new URL("/", location.origin).toString();
       }
-      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        return location.origin + "/";
-      }
-      if (location.pathname.endsWith("preview.html")) {
-        return location.origin + location.pathname.replace(/preview\.html$/, "");
-      }
-      return PRODUCTION_URL;
+      return LOCAL_DEV_URL;
     }
 
     function safeParseUrl(maybeUrl) {
@@ -311,9 +298,10 @@
       var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
       if (isIOS) document.documentElement.classList.add("ios");
 
+      // Optional override: index.html?url=https%3A%2F%2Fexample.com
       const params = new URLSearchParams(location.search);
       const overrideUrl = params.get("url");
-      const finalUrl = safeParseUrl(overrideUrl) || defaultAppUrl();
+      const finalUrl = safeParseUrl(overrideUrl) || defaultPreviewUrl();
 
       // Set src only on the iframe that will actually be visible.
       if (isIOS) {

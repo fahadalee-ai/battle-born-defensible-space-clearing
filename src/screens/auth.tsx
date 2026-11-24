@@ -100,7 +100,7 @@ function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <ScreenContainer title={title} showNavTitle={false} back onBack={onBack} footer={footer}>
+    <ScreenContainer title={title} showNavTitle={false} back onBack={onBack} footer={footer} tone="brand" statusLight>
       <div className="auth">
         <div className="auth-brand">
           <Logo width={104} />

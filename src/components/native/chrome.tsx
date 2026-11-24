@@ -186,6 +186,7 @@ export function ScreenContainer({
   children: ReactNode;
 }) {
   const go = useGo();
+  const { href } = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [pull, setPull] = useState(0);
@@ -200,6 +201,13 @@ export function ScreenContainer({
   useEffect(() => {
     if (title) document.title = `${title} · Battle Born`;
   }, [title]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = 0;
+    setScrolled(false);
+    window.scrollTo(0, 0);
+  }, [href]);
 
   const canSwipe = Boolean(back || onBack);
   const showInline = !large || scrolled;
