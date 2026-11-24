@@ -373,7 +373,7 @@ function initial(): State {
   const seeded = seed();
   return {
     users: [demoUser],
-    sessionId: null,
+    sessionId: demoUser.id,
     onboarded: false,
     prefs: { appearance: "system", language: "en", push: true, email: true, sms: false, reminders: true },
     ...seeded,
@@ -394,11 +394,7 @@ function claimGuest<T extends { userId: string }>(items: T[] | undefined, userId
 function withAccount(state: State): State {
   const users = state.users.some((u) => u.id === demoUser.id) ? state.users : [demoUser, ...state.users];
   const signedIn = Boolean(state.sessionId && users.some((u) => u.id === state.sessionId));
-  const hasGuest = [state.appointments, state.quotes, state.notices, state.properties, state.reviews].some((list) =>
-    list?.some((item) => item.userId === "guest"),
-  );
-  const sessionId = signedIn ? state.sessionId : hasGuest ? demoUser.id : null;
-  if (!sessionId) return { ...state, users, sessionId: null, guestGate: false };
+  const sessionId = signedIn && state.sessionId ? state.sessionId : demoUser.id;
   return {
     ...state,
     users,
@@ -485,8 +481,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSystemTheme(mq.matches ? "dark" : "light");
     const loaded = load();
     if (loaded) {
-      const expired = Boolean(loaded.sessionId && !loaded.users.some((u) => u.id === loaded.sessionId));
-      setState({ ...loaded, sessionId: expired ? null : loaded.sessionId, sessionExpired: expired, guestGate: false });
+      setState({ ...loaded, sessionExpired: false, guestGate: false });
     }
     setReady(true);
     const onChange = () => setSystemTheme(mq.matches ? "dark" : "light");

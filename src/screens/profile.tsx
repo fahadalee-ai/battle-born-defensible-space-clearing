@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Bell, CalendarDays, CircleHelp, FileText, Info, Languages, Lock, LogOut, Map, MapPin, MessageSquare, Shield, Star, SunMoon, Trash2, UserRound } from "lucide-react";
 import { siteConfig } from "@/data/siteConfig";
 import { images } from "@/data/images";
@@ -27,9 +27,6 @@ export function ProfileScreen() {
     { n: app.myQuotes.length, label: "Quotes", to: "/quotes" },
     { n: app.myProperties.length, label: "Places", to: "/profile/properties" },
   ];
-  useEffect(() => {
-    if (app.ready && !user) go.replace("/login");
-  }, [app.ready, user, go]);
   if (!user) {
     return <ScreenContainer title="Profile" tab><div className="stack" /></ScreenContainer>;
   }
