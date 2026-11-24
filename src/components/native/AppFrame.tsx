@@ -42,28 +42,6 @@ function GlobalSheets() {
           <Button variant="text" onClick={app.dismissWelcome}>Not now</Button>
         </div>
       </Sheet>
-      <Sheet open={app.guestGate} onClose={app.dismissGuestGate} title="Save this request">
-        <div className="gap12" style={{ paddingBottom: 12 }}>
-          <p className="body">Create an account or log in to confirm the booking. Your draft stays on this device.</p>
-          <Button
-            onClick={() => {
-              app.dismissGuestGate();
-              go.push("/register");
-            }}
-          >
-            Create Account
-          </Button>
-          <Button
-            variant="tinted"
-            onClick={() => {
-              app.dismissGuestGate();
-              go.push("/login");
-            }}
-          >
-            Log In
-          </Button>
-        </div>
-      </Sheet>
       <Sheet open={app.sessionExpired} onClose={app.dismissSession} title="Session ended">
         <div className="gap12" style={{ paddingBottom: 12 }}>
           <p className="body">For your security, please log in again. Nothing else on this device was removed.</p>

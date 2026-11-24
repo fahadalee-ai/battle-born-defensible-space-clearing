@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarPlus, FileText, Mail, MapPin, MessageSquare, Navigation, Phone, Shield, Users, Building2, House } from "lucide-react";
+import { CalendarDays, CalendarPlus, ClipboardCheck, FileText, Mail, MapPin, MessageSquare, Navigation, Phone, Shield, TreePine, Users, Building2, House } from "lucide-react";
 import { siteConfig } from "@/data/siteConfig";
 import { howItWorks, projects, services, testimonials, whyItMatters, audiences } from "@/data/content";
 import { images } from "@/data/images";
@@ -7,7 +7,7 @@ import { useApp } from "@/lib/store";
 import { useContact } from "@/lib/useContact";
 import { Logo, NotifyButton, ScreenContainer, useGo } from "@/components/native/chrome";
 import { Button, Card, SectionHeader } from "@/components/native/ui";
-import { Badge, EmptyState, Photo, ProjectCard, RatingStars, ServiceCard, StepIndicator } from "@/components/native/widgets";
+import { Badge, EmptyState, Photo, ProjectCard, RatingStars, ServiceCard } from "@/components/native/widgets";
 import { serviceById } from "@/data/content";
 
 export function HomeScreen() {
@@ -91,14 +91,24 @@ export function HomeScreen() {
 
         <section className="gap12">
           <SectionHeader title="How It Works" />
-          <Card>
-            <StepIndicator steps={howItWorks.map((s) => s.title)} current={1} />
-            <div className="gap12" style={{ marginTop: 16 }}>
-              {howItWorks.map((step) => (
-                <p key={step.title} className="subhead" style={{ margin: 0 }}><strong>{step.title}. </strong><span className="muted">{step.detail}</span></p>
-              ))}
-            </div>
-          </Card>
+          <div className="process">
+            {howItWorks.map((step, index) => {
+              const Icon = [CalendarPlus, ClipboardCheck, TreePine, Shield][index] ?? Shield;
+              return (
+                <div key={step.title} className="process-step">
+                  <div className="process-rail" aria-hidden>
+                    <span className="process-mark"><Icon size={18} strokeWidth={1.75} /></span>
+                    {index < howItWorks.length - 1 ? <span className="process-line" /> : null}
+                  </div>
+                  <div className="process-copy">
+                    <span className="process-kicker">Step {index + 1}</span>
+                    <h3 className="headline">{step.title}</h3>
+                    <p className="subhead muted">{step.detail}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         <section className="gap12">

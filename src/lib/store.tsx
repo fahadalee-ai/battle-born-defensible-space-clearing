@@ -490,11 +490,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const api = useMemo<AppApi>(() => {
     const user = state.users.find((u) => u.id === state.sessionId) ?? null;
     const theme = state.prefs.appearance === "system" ? systemTheme : state.prefs.appearance;
-    const myAppointments = state.appointments.filter((a) => a.userId === user?.id);
-    const myQuotes = state.quotes.filter((q) => q.userId === user?.id);
-    const myReviews = state.reviews.filter((r) => r.userId === user?.id);
-    const myProperties = state.properties.filter((p) => p.userId === user?.id);
-    const myNotices = state.notices.filter((n) => n.userId === user?.id);
+    const mine = (userId: string) => (user ? userId === user.id : userId === "guest");
+    const myAppointments = state.appointments.filter((a) => mine(a.userId));
+    const myQuotes = state.quotes.filter((q) => mine(q.userId));
+    const myReviews = state.reviews.filter((r) => mine(r.userId));
+    const myProperties = state.properties.filter((p) => mine(p.userId));
+    const myNotices = state.notices.filter((n) => mine(n.userId));
     return {
       ...state,
       ready,
@@ -617,14 +618,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setDraft: (patch) => setState((s) => ({ ...s, draft: { ...s.draft, ...patch } })),
       resetDraft: () => setState((s) => ({ ...s, draft: emptyDraft(user ? { customerType: user.customerType, name: user.name, email: user.email, phone: user.phone, company: user.company || "" } : {}) })),
       confirmBooking: () => {
-        if (!user) {
-          setState((s) => ({ ...s, guestGate: true, returnTo: "/book?step=6" }));
-          return null;
-        }
         const d = state.draft;
+        const userId = user?.id || "guest";
         const appt: Appointment = {
           id: uid("apt"),
-          userId: user.id,
+          userId,
           ref: refCode(),
           services: d.services,
           customerType: d.customerType,
@@ -642,9 +640,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           timeSlot: d.timeSlot,
           startTime: d.startTime,
           appointmentType: d.appointmentType,
-          contactName: d.name || user.name,
-          phone: d.phone || user.phone,
-          email: d.email || user.email,
+          contactName: d.name || user?.name || "Guest",
+          phone: d.phone || user?.phone || "",
+          email: d.email || user?.email || "",
           contactMethod: d.contactMethod,
           company: d.company,
           roleTitle: d.roleTitle,
@@ -653,7 +651,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         const notice: Notice = {
           id: uid("n"),
-          userId: user.id,
+          userId,
           title: "Request received",
           body: `${appt.ref} is pending. We will confirm your ${appt.appointmentType.toLowerCase()}.`,
           day: "Today",
@@ -662,9 +660,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         setState((s) => ({
           ...s,
+          guestGate: false,
           appointments: [appt, ...s.appointments],
           notices: [notice, ...s.notices],
-          draft: emptyDraft({ customerType: user.customerType, name: user.name, email: user.email, phone: user.phone }),
+          draft: emptyDraft(user ? { customerType: user.customerType, name: user.name, email: user.email, phone: user.phone } : {}),
         }));
         return appt;
       },

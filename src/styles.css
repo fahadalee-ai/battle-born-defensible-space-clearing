@@ -1171,6 +1171,51 @@ textarea.control {
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
+.process {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 18px 16px 8px;
+  box-shadow: var(--shadow);
+}
+.process-step { display: flex; gap: 14px; }
+.process-rail {
+  width: 40px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.process-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #2a4e01;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.process-line {
+  width: 2px;
+  flex: 1;
+  min-height: 18px;
+  margin: 6px 0;
+  border-radius: 99px;
+  background: var(--brand-12);
+}
+.process-copy { min-width: 0; padding-bottom: 18px; }
+.process-kicker {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-ink);
+}
+.process-copy .headline { margin: 0; }
+.process-copy .subhead { margin: 4px 0 0; }
+
 .steps { display: flex; gap: 8px; }
 .step-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .step-dot {
