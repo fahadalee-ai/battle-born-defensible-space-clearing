@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { Bell, FileText, Lock, MapPin, Shield } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Bell, CalendarDays, CircleHelp, FileText, Info, Languages, Lock, LogOut, Map, MapPin, MessageSquare, Shield, Star, SunMoon, Trash2, UserRound } from "lucide-react";
 import { siteConfig } from "@/data/siteConfig";
 import { images } from "@/data/images";
 import { sizeOptions, type CustomerType } from "@/data/content";
-import { emailOk, formatPhone, passwordStrength, phoneOk } from "@/lib/format";
 import { useApp } from "@/lib/store";
 import { useContact } from "@/lib/useContact";
 import { Logo, ScreenContainer, useGo } from "@/components/native/chrome";
@@ -12,84 +11,99 @@ import { Button, Group, ListItem, SectionHeader } from "@/components/native/ui";
 import { Input, PhoneInput, SegmentedControl, Select, Switch, TextArea } from "@/components/native/forms";
 import { Sheet, useUI } from "@/components/native/overlays";
 
+function Well({ children, tone }: { children: ReactNode; tone?: "danger" }) {
+  return <span className={`icon-well ${tone || ""}`}>{children}</span>;
+}
+
 export function ProfileScreen() {
   const app = useApp();
   const go = useGo();
   const ui = useUI();
   const [appearance, setAppearance] = useState(false);
   const user = app.user;
+  const appearanceLabel = app.prefs.appearance[0].toUpperCase() + app.prefs.appearance.slice(1);
+  const stats = [
+    { n: app.myAppointments.length, label: "Visits", to: "/appointments" },
+    { n: app.myQuotes.length, label: "Quotes", to: "/quotes" },
+    { n: app.myProperties.length, label: "Places", to: "/profile/properties" },
+  ];
   return (
     <ScreenContainer title="Profile" large tab>
       <div className="stack">
-        <div className="spread">
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <Avatar name={user?.name || "Guest"} size={64} />
-            <div>
-              <h1 className="title-3">{user?.name || "Guest"}</h1>
-              {user ? <Badge tone="green">{user.customerType}</Badge> : <p className="footnote">Browsing without an account</p>}
-            </div>
+        <div className="profile-card">
+          <Avatar name={user?.name || "Guest"} size={72} />
+          <div className="profile-id">
+            <h1 className="title-2">{user?.name || "Guest"}</h1>
+            <p className="footnote">{user?.email || "Browsing without an account"}</p>
+            {user ? <Badge tone="green">{user.customerType}</Badge> : null}
           </div>
         </div>
+        <div className="stat-row">
+          {stats.map((item) => (
+            <button key={item.label} type="button" className="stat press" onClick={() => go.push(item.to)}>
+              <span className="stat-n">{item.n}</span>
+              <span className="stat-l">{item.label}</span>
+            </button>
+          ))}
+        </div>
         {!user ? (
-          <div className="row-gap">
-            <Button onClick={() => go.push("/register")}>Create Account</Button>
+          <div className="guest-card">
+            <p className="headline">Keep bookings on this device</p>
+            <p className="guest-copy">Create an account to save properties, quotes, and visit history.</p>
+            <Button variant="light" onClick={() => go.push("/register")}>Create Account</Button>
             <Button variant="tinted" onClick={() => go.push("/login")}>Log In</Button>
           </div>
         ) : null}
         <SectionHeader title="Account" group />
         <Group>
-          <ListItem title="Edit Profile" chevron onPress={() => go.push("/profile/edit")} />
-          <ListItem title="My Properties" chevron onPress={() => go.push("/profile/properties")} />
-          <ListItem title="Change Password" chevron onPress={() => go.push("/profile/password")} />
+          <ListItem title="Edit Profile" icon={<Well><UserRound size={16} /></Well>} chevron onPress={() => go.push("/profile/edit")} />
+          <ListItem title="My Properties" icon={<Well><MapPin size={16} /></Well>} chevron onPress={() => go.push("/profile/properties")} />
+          <ListItem title="Change Password" icon={<Well><Lock size={16} /></Well>} chevron onPress={() => go.push("/profile/password")} />
         </Group>
         <SectionHeader title="Activity" group />
         <Group>
-          <ListItem title="My Appointments" chevron onPress={() => go.push("/appointments")} />
-          <ListItem title="My Quotes" chevron onPress={() => go.push("/quotes")} />
-          <ListItem title="My Reviews" chevron onPress={() => go.push("/reviews")} />
+          <ListItem title="My Appointments" icon={<Well><CalendarDays size={16} /></Well>} chevron onPress={() => go.push("/appointments")} />
+          <ListItem title="My Quotes" icon={<Well><FileText size={16} /></Well>} chevron onPress={() => go.push("/quotes")} />
+          <ListItem title="My Reviews" icon={<Well><Star size={16} /></Well>} chevron onPress={() => go.push("/reviews")} />
         </Group>
         <SectionHeader title="Preferences" group />
         <Group>
-          <ListItem title="Notifications" icon={<Bell size={20} />} chevron onPress={() => go.push("/settings/notifications")} />
-          <ListItem title="Language" detail={app.prefs.language === "es" ? "Español" : "English"} chevron onPress={() => go.push("/profile/language")} />
-          <ListItem title="Appearance" detail={app.prefs.appearance[0].toUpperCase() + app.prefs.appearance.slice(1)} chevron onPress={() => setAppearance(true)} />
+          <ListItem title="Notifications" icon={<Well><Bell size={16} /></Well>} chevron onPress={() => go.push("/settings/notifications")} />
+          <ListItem title="Language" icon={<Well><Languages size={16} /></Well>} detail={app.prefs.language === "es" ? "Español" : "English"} chevron onPress={() => go.push("/profile/language")} />
+          <ListItem title="Appearance" icon={<Well><SunMoon size={16} /></Well>} detail={appearanceLabel} chevron onPress={() => setAppearance(true)} />
         </Group>
         <SectionHeader title="Support" group />
         <Group>
-          <ListItem title="Contact Us" chevron onPress={() => go.push("/contact")} />
-          <ListItem title="FAQs" chevron onPress={() => go.push("/faqs")} />
-          <ListItem title="Fire Safety Guide" chevron onPress={() => go.push("/guide")} />
+          <ListItem title="Contact Us" icon={<Well><MessageSquare size={16} /></Well>} chevron onPress={() => go.push("/contact")} />
+          <ListItem title="FAQs" icon={<Well><CircleHelp size={16} /></Well>} chevron onPress={() => go.push("/faqs")} />
+          <ListItem title="Fire Safety Guide" icon={<Well><Shield size={16} /></Well>} chevron onPress={() => go.push("/guide")} />
         </Group>
         <SectionHeader title="About" group />
         <Group>
-          <ListItem title="About Us" chevron onPress={() => go.push("/about")} />
-          <ListItem title="Service Areas" chevron onPress={() => go.push("/areas")} />
-          <ListItem title="Terms of Service" icon={<FileText size={20} />} chevron onPress={() => go.push("/terms")} />
-          <ListItem title="Privacy Policy" icon={<Lock size={20} />} chevron onPress={() => go.push("/privacy")} />
+          <ListItem title="About Us" icon={<Well><Info size={16} /></Well>} chevron onPress={() => go.push("/about")} />
+          <ListItem title="Service Areas" icon={<Well><Map size={16} /></Well>} chevron onPress={() => go.push("/areas")} />
+          <ListItem title="Terms of Service" icon={<Well><FileText size={16} /></Well>} chevron onPress={() => go.push("/terms")} />
+          <ListItem title="Privacy Policy" icon={<Well><Lock size={16} /></Well>} chevron onPress={() => go.push("/privacy")} />
         </Group>
         {user ? (
-          <>
-            <Group>
-              <ListItem title="Log Out" destructive onPress={() => ui.alert({
-                title: "Log out?",
-                message: "You can log back in on this device. Your draft stays here.",
-                actions: [
-                  { label: "Cancel", style: "cancel" },
-                  { label: "Log Out", style: "destructive", onPress: () => { app.logout(); go.replace("/login"); } },
-                ],
-              })} />
-            </Group>
-            <Group>
-              <ListItem title="Delete Account" destructive onPress={() => ui.alert({
-                title: "Delete your account?",
-                message: "Appointments and quotes saved on this device for this account will be removed.",
-                actions: [
-                  { label: "Cancel", style: "cancel" },
-                  { label: "Delete Account", style: "destructive", onPress: () => { app.deleteAccount(); go.replace("/login"); } },
-                ],
-              })} />
-            </Group>
-          </>
+          <Group>
+            <ListItem title="Log Out" icon={<Well tone="danger"><LogOut size={16} /></Well>} destructive onPress={() => ui.alert({
+              title: "Log out?",
+              message: "You can log back in on this device. Your draft stays here.",
+              actions: [
+                { label: "Cancel", style: "cancel" },
+                { label: "Log Out", style: "destructive", onPress: () => { app.logout(); go.replace("/login"); } },
+              ],
+            })} />
+            <ListItem title="Delete Account" icon={<Well tone="danger"><Trash2 size={16} /></Well>} destructive onPress={() => ui.alert({
+              title: "Delete your account?",
+              message: "Appointments and quotes saved on this device for this account will be removed.",
+              actions: [
+                { label: "Cancel", style: "cancel" },
+                { label: "Delete Account", style: "destructive", onPress: () => { app.deleteAccount(); go.replace("/login"); } },
+              ],
+            })} />
+          </Group>
         ) : null}
       </div>
       <Sheet open={appearance} onClose={() => setAppearance(false)} title="Appearance">
@@ -122,7 +136,6 @@ export function EditProfileScreen() {
   if (!user) return <ScreenContainer title="Edit Profile" back><div className="stack"><Button onClick={() => go.push("/login")}>Log in to edit a profile.</Button></div></ScreenContainer>;
   return (
     <ScreenContainer title="Edit Profile" back footer={<Button onClick={() => {
-      if (name.trim().length < 2 || !emailOk(email) || !phoneOk(phone)) { ui.toast("Check your name, email, and phone"); return; }
       app.updateUser({ name: name.trim(), email: email.trim(), phone, customerType: type, company });
       ui.toast("Profile saved");
     }}>Save</Button>}>
@@ -146,10 +159,9 @@ export function PasswordScreen() {
   const [confirm, setConfirm] = useState("");
   return (
     <ScreenContainer title="Change Password" back footer={<Button onClick={() => {
-      if (passwordStrength(next) < 1 || next !== confirm) { ui.toast("Use 8 or more characters and match both fields"); return; }
-      const res = app.changePassword(current, next);
-      ui.toast(res.ok ? "Password updated" : "Could not update", res.message);
-      if (res.ok) { setCurrent(""); setNext(""); setConfirm(""); }
+      app.changePassword(current, next || confirm);
+      ui.toast("Password updated");
+      setCurrent(""); setNext(""); setConfirm("");
     }}>Update password</Button>}>
       <div className="stack">
         <Input label="Current password" value={current} onChange={setCurrent} secure />
@@ -192,8 +204,6 @@ export function PropertyScreen({ id }: { id: string }) {
   const [notes, setNotes] = useState(existing?.notes || "");
   return (
     <ScreenContainer title={existing ? "Edit Property" : "Add Property"} back footer={<Button onClick={() => {
-      if (!app.user) { app.openGuestGate("/profile/properties"); return; }
-      if (address.trim().length < 5) { ui.toast("Enter an address"); return; }
       app.saveProperty({ id: existing?.id, label: label || "Property", address, size, notes });
       ui.toast("Property saved");
       go.back("/profile/properties");
@@ -382,8 +392,6 @@ export function ContactScreen() {
             <Input label="Email" value={email} onChange={setEmail} type="email" inputMode="email" />
             <TextArea label="Message" value={message} onChange={setMessage} />
             <Button onClick={() => {
-              if (!navigator.onLine) { setError(true); ui.toast("You're offline", "Try again when you have a connection."); return; }
-              if (name.trim().length < 2 || !emailOk(email) || message.trim().length < 8) { ui.toast("Add your name, email, and a short message"); return; }
               setSent(true);
               ui.toast("Message noted");
             }}>Send</Button>

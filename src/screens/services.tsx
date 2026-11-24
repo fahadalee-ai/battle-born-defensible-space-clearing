@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { siteConfig } from "@/data/siteConfig";
-import { audiences, projects, serviceById, services, type Audience } from "@/data/content";
+import { audiences, projects, serviceById, services } from "@/data/content";
 import { ScreenContainer, useGo } from "@/components/native/chrome";
 import { Button, Card, Group, ListItem, SectionHeader } from "@/components/native/ui";
-import { Badge, BeforeAfter, Photo, ServiceCard } from "@/components/native/widgets";
-import { SearchBar, SegmentedControl } from "@/components/native/forms";
+import { Badge, BeforeAfter, Photo } from "@/components/native/widgets";
+import { SearchBar } from "@/components/native/forms";
+
+const FILTERS = ["All", "Residential", "Commercial", "HOA"] as const;
 
 export function ServicesScreen() {
   const go = useGo();
   const [query, setQuery] = useState("");
-  const [segment, setSegment] = useState<"All" | Audience>("All");
+  const [segment, setSegment] = useState<(typeof FILTERS)[number]>("All");
   const list = useMemo(() => {
     return services.filter((service) => {
       const text = `${service.name} ${service.summaries[segment]}`.toLowerCase();
@@ -19,24 +21,53 @@ export function ServicesScreen() {
       return matchesQuery && matchesSegment;
     });
   }, [query, segment]);
+  const featured = !query.trim() && segment === "All" ? list[0] : null;
+  const rest = featured ? list.slice(1) : list;
   return (
     <ScreenContainer title="Services" large tab>
       <div className="stack">
         <SearchBar value={query} onChange={setQuery} placeholder="Search services" />
-        <SegmentedControl value={segment} options={["All", "Residential", "Commercial", "HOA"]} onChange={(v) => setSegment(v as "All" | Audience)} />
-        <Group>
-          {list.map((service) => (
-            <ServiceCard
-              key={service.id}
-              layout="row"
-              image={service.image}
-              alt={service.alt}
-              name={service.name}
-              benefit={service.summaries[segment]}
-              onPress={() => go.push(`/services/${service.id}`)}
-            />
+        <div className="chip-row" role="tablist" aria-label="Service type">
+          {FILTERS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              role="tab"
+              aria-selected={segment === item}
+              className={`chip ${segment === item ? "on" : ""}`}
+              onClick={() => setSegment(item)}
+            >
+              {item}
+            </button>
           ))}
-        </Group>
+        </div>
+        {featured ? (
+          <button type="button" className="svc-hero press" onClick={() => go.push(`/services/${featured.id}`)}>
+            <Photo src={featured.image} alt={featured.alt} ratio="16 / 10" eager />
+            <span className="svc-hero-copy">
+              <span className="svc-kicker">Most requested</span>
+              <span className="svc-hero-title">{featured.name}</span>
+              <span className="svc-hero-sub">{featured.summaries.All}</span>
+            </span>
+          </button>
+        ) : null}
+        <div className="svc-list">
+          {rest.map((service) => (
+            <button key={service.id} type="button" className="svc-tile press" onClick={() => go.push(`/services/${service.id}`)}>
+              <Photo src={service.image} alt={service.alt} ratio="16 / 9" />
+              <span className="svc-tile-copy">
+                <span className="spread">
+                  <span className="headline">{service.name}</span>
+                  <ChevronRight size={18} strokeWidth={1.75} color="var(--brand-ink)" />
+                </span>
+                <span className="footnote">{service.summaries[segment]}</span>
+                <span className="chips">
+                  {service.audiences.map((audience) => <Badge key={audience} tone="green">{audience}</Badge>)}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
         {list.length === 0 ? <p className="body muted">No services match that search.</p> : null}
       </div>
     </ScreenContainer>

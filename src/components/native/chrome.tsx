@@ -133,7 +133,7 @@ export function BottomTabBar() {
           <button
             key={tab.to}
             type="button"
-            className={`tab ${active ? "active" : ""}`}
+            className={`tab ${tab.book ? "book" : ""} ${active ? "active" : ""}`}
             aria-current={active ? "page" : undefined}
             onClick={() => {
               if (path !== tab.to) go.push(tab.to);
@@ -141,12 +141,14 @@ export function BottomTabBar() {
           >
             {tab.book ? (
               <span className="book-orb">
-                <Icon size={16} strokeWidth={1.75} color="#fff" />
+                <Icon size={18} strokeWidth={2} />
               </span>
             ) : (
-              <Icon size={24} strokeWidth={1.75} fill={active ? "currentColor" : "none"} />
+              <span className="tab-glyph">
+                <Icon size={22} strokeWidth={1.75} fill={active ? "currentColor" : "none"} />
+              </span>
             )}
-            {tab.label}
+            <span className="tab-label">{tab.label}</span>
           </button>
         );
       })}
@@ -210,7 +212,8 @@ export function ScreenContainer({
   }, [href]);
 
   const canSwipe = Boolean(back || onBack);
-  const showInline = !large || scrolled;
+  const standardBar = (Boolean(back) || Boolean(tab)) && tone !== "brand" && !overlay;
+  const showInline = standardBar || !large || scrolled;
 
   return (
     <div
@@ -240,7 +243,7 @@ export function ScreenContainer({
       }}
     >
       {chrome || overlay ? (
-        <header className={`screen-head ${scrolled ? "scrolled" : ""} ${overlay || !chrome ? "overlay" : ""}`}>
+        <header className={`screen-head ${standardBar || scrolled ? "scrolled" : ""} ${overlay || !chrome ? "overlay" : ""}`}>
           {chrome ? (
             <AppHeader title={title} showTitle={showNavTitle && showInline} back={back} onBack={handleBack} right={right} light={statusLight || tone === "brand"} />
           ) : (
@@ -281,7 +284,7 @@ export function ScreenContainer({
         <div className="pull" style={{ height: refreshing ? 36 : pull }} aria-hidden>
           {(refreshing || pull > 12) && <span className="spinner dark" />}
         </div>
-        {large && chrome ? <h1 className="large-title">{title}</h1> : null}
+        {large && chrome && !standardBar ? <h1 className="large-title">{title}</h1> : null}
         {children}
       </div>
       {footer ? <div className="dock">{footer}</div> : null}

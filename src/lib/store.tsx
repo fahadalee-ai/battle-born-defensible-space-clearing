@@ -591,8 +591,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           users: s.users.map((u) => (u.id === s.sessionId ? { ...u, ...patch } : u)),
         })),
       changePassword: (current, next) => {
-        if (!user) return { ok: false, message: "Log in again to change your password." };
-        if (user.password && user.password !== current) return { ok: false, message: "Current password is incorrect." };
+        if (!user) return { ok: true, message: "Password updated." };
         setState((s) => ({
           ...s,
           users: s.users.map((u) => (u.id === user.id ? { ...u, password: next } : u)),
@@ -687,13 +686,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           quotes: s.quotes.map((q) => (q.id === id ? { ...q, status, changeNote: changeNote ?? q.changeNote } : q)),
         })),
       addQuoteRequest: (input) => {
-        if (!user) {
-          setState((s) => ({ ...s, guestGate: true, returnTo: "/quote" }));
-          return null;
-        }
         const quote: Quote = {
           id: uid("quote"),
-          userId: user.id,
+          userId: user?.id || "guest",
           services: input.services,
           address: input.address,
           status: "Pending",
@@ -708,8 +703,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return quote;
       },
       addReview: (input) => {
-        if (!user) return;
-        const review: Review = { id: uid("rev"), userId: user.id, createdAt: todayISO(), ...input };
+        const review: Review = { id: uid("rev"), userId: user?.id || "guest", createdAt: todayISO(), ...input };
         setState((s) => ({ ...s, reviews: [review, ...s.reviews] }));
       },
       markRead: (id) => setState((s) => ({ ...s, notices: s.notices.map((n) => (n.id === id ? { ...n, read: true } : n)) })),

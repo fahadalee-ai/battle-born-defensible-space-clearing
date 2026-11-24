@@ -176,7 +176,6 @@ export function AppointmentDetailScreen({ id }: { id: string }) {
           <TimeSlotGrid value={slot} onChange={(next) => { setSlot(next); setTime(TIME_SLOTS.find((s) => s.id === next)?.times[0] || ""); }} />
           <TimeWheel slot={slot} value={time} onChange={setTime} />
           <Button onClick={() => {
-            if (!date || !slot) { ui.toast("Choose a date and time"); return; }
             app.reschedule(item.id, date, slot, time);
             ui.toast("Rescheduled", "Your request was updated.");
             go.replace(`/appointments/${item.id}`);
@@ -301,10 +300,8 @@ export function QuoteRequestScreen() {
   }
   return (
     <ScreenContainer title="Get a Quote" back footer={<Button onClick={() => {
-      if (!chosen.length || address.trim().length < 5 || !size) { ui.toast("Add a service, address, and size"); return; }
-      if (!app.user) { app.openGuestGate("/quote"); return; }
-      const quote = app.addQuoteRequest({ services: chosen, address, size, notes: `${notes}\n${type} · ${formatPhone(phone)} · ${email}`, photos });
-      if (quote) setDone(true);
+      app.addQuoteRequest({ services: chosen.length ? chosen : preset ? [preset] : [], address, size, notes: `${notes}\n${type} · ${formatPhone(phone)} · ${email}`, photos });
+      setDone(true);
     }}>Submit request</Button>}>
       <div className="stack">
         <p className="body">Tell us what you need. {siteConfig.pricingNote}</p>
@@ -333,8 +330,7 @@ export function ReviewScreen() {
   const [text, setText] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   return (
-    <ScreenContainer title="Leave a Review" back footer={<Button disabled={!stars} onClick={() => {
-      if (!app.user) { app.openGuestGate("/reviews"); return; }
+    <ScreenContainer title="Leave a Review" back footer={<Button onClick={() => {
       app.addReview({ appointmentId, stars, text, photos });
       ui.toast("Thank you", "Your review is saved on this device.");
       go.replace("/reviews");
