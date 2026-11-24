@@ -122,7 +122,6 @@ export function WelcomeScreen() {
     <AuthShell title="Welcome" headline="Protect what matters" subtitle={siteConfig.tagline} onBack={() => go.replace("/onboarding")}>
       <Button onClick={() => go.push("/register")}>Create Account</Button>
       <Button variant="tinted" onClick={() => go.push("/login")}>Log In</Button>
-      <Button variant="text" onClick={() => go.replace("/home")}>Continue as Guest</Button>
       <LegalLinks />
     </AuthShell>
   );

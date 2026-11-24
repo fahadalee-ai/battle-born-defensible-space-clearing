@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Bell, CalendarDays, CircleHelp, FileText, Info, Languages, Lock, LogOut, Map, MapPin, MessageSquare, Shield, Star, SunMoon, Trash2, UserRound } from "lucide-react";
 import { siteConfig } from "@/data/siteConfig";
 import { images } from "@/data/images";
@@ -27,15 +27,21 @@ export function ProfileScreen() {
     { n: app.myQuotes.length, label: "Quotes", to: "/quotes" },
     { n: app.myProperties.length, label: "Places", to: "/profile/properties" },
   ];
+  useEffect(() => {
+    if (app.ready && !user) go.replace("/login");
+  }, [app.ready, user, go]);
+  if (!user) {
+    return <ScreenContainer title="Profile" tab><div className="stack" /></ScreenContainer>;
+  }
   return (
     <ScreenContainer title="Profile" large tab>
       <div className="stack">
         <div className="profile-card">
-          <Avatar name={user?.name || "Guest"} size={72} />
+          <Avatar name={user.name} size={72} />
           <div className="profile-id">
-            <h1 className="title-2">{user?.name || "Guest"}</h1>
-            <p className="footnote">{user?.email || "Browsing without an account"}</p>
-            {user ? <Badge tone="green">{user.customerType}</Badge> : null}
+            <h1 className="title-2">{user.name}</h1>
+            <p className="footnote">{user.email}</p>
+            <Badge tone="green">{user.customerType}</Badge>
           </div>
         </div>
         <div className="stat-row">
@@ -46,14 +52,6 @@ export function ProfileScreen() {
             </button>
           ))}
         </div>
-        {!user ? (
-          <div className="guest-card">
-            <p className="headline">Keep bookings on this device</p>
-            <p className="guest-copy">Create an account to save properties, quotes, and visit history.</p>
-            <Button variant="light" onClick={() => go.push("/register")}>Create Account</Button>
-            <Button variant="tinted" onClick={() => go.push("/login")}>Log In</Button>
-          </div>
-        ) : null}
         <SectionHeader title="Account" group />
         <Group>
           <ListItem title="Edit Profile" icon={<Well><UserRound size={16} /></Well>} chevron onPress={() => go.push("/profile/edit")} />
@@ -85,9 +83,8 @@ export function ProfileScreen() {
           <ListItem title="Terms of Service" icon={<Well><FileText size={16} /></Well>} chevron onPress={() => go.push("/terms")} />
           <ListItem title="Privacy Policy" icon={<Well><Lock size={16} /></Well>} chevron onPress={() => go.push("/privacy")} />
         </Group>
-        {user ? (
-          <Group>
-            <ListItem title="Log Out" icon={<Well tone="danger"><LogOut size={16} /></Well>} destructive onPress={() => ui.alert({
+        <Group>
+          <ListItem title="Log Out" icon={<Well tone="danger"><LogOut size={16} /></Well>} destructive onPress={() => ui.alert({
               title: "Log out?",
               message: "You can log back in on this device. Your draft stays here.",
               actions: [
@@ -103,8 +100,7 @@ export function ProfileScreen() {
                 { label: "Delete Account", style: "destructive", onPress: () => { app.deleteAccount(); go.replace("/login"); } },
               ],
             })} />
-          </Group>
-        ) : null}
+        </Group>
       </div>
       <Sheet open={appearance} onClose={() => setAppearance(false)} title="Appearance">
         <Group>

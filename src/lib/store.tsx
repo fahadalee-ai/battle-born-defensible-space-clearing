@@ -387,6 +387,31 @@ function initial(): State {
   };
 }
 
+function claimGuest<T extends { userId: string }>(items: T[] | undefined, userId: string): T[] {
+  return (items || []).map((item) => (item.userId === "guest" ? { ...item, userId } : item));
+}
+
+function withAccount(state: State): State {
+  const users = state.users.some((u) => u.id === demoUser.id) ? state.users : [demoUser, ...state.users];
+  const signedIn = Boolean(state.sessionId && users.some((u) => u.id === state.sessionId));
+  const hasGuest = [state.appointments, state.quotes, state.notices, state.properties, state.reviews].some((list) =>
+    list?.some((item) => item.userId === "guest"),
+  );
+  const sessionId = signedIn ? state.sessionId : hasGuest ? demoUser.id : null;
+  if (!sessionId) return { ...state, users, sessionId: null, guestGate: false };
+  return {
+    ...state,
+    users,
+    sessionId,
+    guestGate: false,
+    appointments: claimGuest(state.appointments, sessionId),
+    quotes: claimGuest(state.quotes, sessionId),
+    notices: claimGuest(state.notices, sessionId),
+    properties: claimGuest(state.properties, sessionId),
+    reviews: claimGuest(state.reviews, sessionId),
+  };
+}
+
 function load(): State | null {
   if (typeof window === "undefined") return null;
   try {
@@ -396,7 +421,7 @@ function load(): State | null {
     if (!Array.isArray(parsed.users) || parsed.users.length === 0) parsed.users = [demoUser];
     parsed.draft = { ...emptyDraft(), ...parsed.draft };
     parsed.prefs = { ...initial().prefs, ...parsed.prefs };
-    return parsed;
+    return withAccount(parsed);
   } catch {
     return null;
   }
@@ -490,12 +515,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const api = useMemo<AppApi>(() => {
     const user = state.users.find((u) => u.id === state.sessionId) ?? null;
     const theme = state.prefs.appearance === "system" ? systemTheme : state.prefs.appearance;
-    const mine = (userId: string) => (user ? userId === user.id : userId === "guest");
-    const myAppointments = state.appointments.filter((a) => mine(a.userId));
-    const myQuotes = state.quotes.filter((q) => mine(q.userId));
-    const myReviews = state.reviews.filter((r) => mine(r.userId));
-    const myProperties = state.properties.filter((p) => mine(p.userId));
-    const myNotices = state.notices.filter((n) => mine(n.userId));
+    const myAppointments = state.appointments.filter((a) => user && a.userId === user.id);
+    const myQuotes = state.quotes.filter((q) => user && q.userId === user.id);
+    const myReviews = state.reviews.filter((r) => user && r.userId === user.id);
+    const myProperties = state.properties.filter((p) => user && p.userId === user.id);
+    const myNotices = state.notices.filter((n) => user && n.userId === user.id);
     return {
       ...state,
       ready,
@@ -515,7 +539,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
         );
         if (!found) return { ok: false, message: "That email and password do not match." };
-        setState((s) => ({ ...s, sessionId: found.id, guestGate: false }));
+        setState((s) => withAccount({ ...s, sessionId: found.id, guestGate: false }));
         return { ok: true };
       },
       loginProvider: (provider) => {
@@ -536,7 +560,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   customerType: "Residential",
                 }),
               ];
-          return { ...s, users, sessionId: next!.id, guestGate: false };
+          return withAccount({ ...s, users, sessionId: next!.id, guestGate: false });
         });
       },
       register: (input) => {
@@ -550,7 +574,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!pending || code !== siteConfig.demo.otp) return false;
         const user: User = { ...pending, id: uid("user") };
         setPending(null);
-        setState((s) => ({ ...s, users: [...s.users, user], sessionId: user.id, welcome: !s.returnTo, guestGate: false }));
+        setState((s) => withAccount({ ...s, users: [...s.users, user], sessionId: user.id, welcome: !s.returnTo, guestGate: false }));
         return true;
       },
       startReset: (email) => {
@@ -619,7 +643,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetDraft: () => setState((s) => ({ ...s, draft: emptyDraft(user ? { customerType: user.customerType, name: user.name, email: user.email, phone: user.phone, company: user.company || "" } : {}) })),
       confirmBooking: () => {
         const d = state.draft;
-        const userId = user?.id || "guest";
+        const userId = user?.id || demoUser.id;
         const appt: Appointment = {
           id: uid("apt"),
           userId,
@@ -640,7 +664,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           timeSlot: d.timeSlot,
           startTime: d.startTime,
           appointmentType: d.appointmentType,
-          contactName: d.name || user?.name || "Guest",
+          contactName: d.name || user?.name || "",
           phone: d.phone || user?.phone || "",
           email: d.email || user?.email || "",
           contactMethod: d.contactMethod,
@@ -660,6 +684,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         setState((s) => ({
           ...s,
+          sessionId: s.sessionId || demoUser.id,
+          users: s.users.some((u) => u.id === demoUser.id) ? s.users : [demoUser, ...s.users],
           guestGate: false,
           appointments: [appt, ...s.appointments],
           notices: [notice, ...s.notices],
@@ -687,7 +713,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addQuoteRequest: (input) => {
         const quote: Quote = {
           id: uid("quote"),
-          userId: user?.id || "guest",
+          userId: user?.id || demoUser.id,
           services: input.services,
           address: input.address,
           status: "Pending",
@@ -698,12 +724,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ],
           createdAt: todayISO(),
         };
-        setState((s) => ({ ...s, quotes: [quote, ...s.quotes] }));
+        setState((s) => ({
+          ...s,
+          sessionId: s.sessionId || demoUser.id,
+          users: s.users.some((u) => u.id === demoUser.id) ? s.users : [demoUser, ...s.users],
+          quotes: [quote, ...s.quotes],
+        }));
         return quote;
       },
       addReview: (input) => {
-        const review: Review = { id: uid("rev"), userId: user?.id || "guest", createdAt: todayISO(), ...input };
-        setState((s) => ({ ...s, reviews: [review, ...s.reviews] }));
+        const review: Review = { id: uid("rev"), userId: user?.id || demoUser.id, createdAt: todayISO(), ...input };
+        setState((s) => ({
+          ...s,
+          sessionId: s.sessionId || demoUser.id,
+          users: s.users.some((u) => u.id === demoUser.id) ? s.users : [demoUser, ...s.users],
+          reviews: [review, ...s.reviews],
+        }));
       },
       markRead: (id) => setState((s) => ({ ...s, notices: s.notices.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
       markAllRead: () =>

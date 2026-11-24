@@ -100,15 +100,19 @@ export function AppointmentDetailScreen({ id }: { id: string }) {
   const { searchStr } = useLocation();
   const sheet = new URLSearchParams(searchStr).get("sheet");
   const item = app.myAppointments.find((a) => a.id === id) || app.appointments.find((a) => a.id === id);
+  const owns = !!item && !!app.user && item.userId === app.user.id;
   const [reason, setReason] = useState(cancelReasons[0]);
   const [menu, setMenu] = useState(false);
   const [date, setDate] = useState(item?.date || "");
   const [slot, setSlot] = useState(item?.timeSlot || "");
   const [time, setTime] = useState(item?.startTime || "");
-  if (!item || item.userId !== app.user?.id) {
+  if (!app.ready) {
+    return <ScreenContainer title="Appointment" back><div className="stack" /></ScreenContainer>;
+  }
+  if (!owns || !item) {
     return (
       <ScreenContainer title="Appointment" back>
-        <EmptyState image={images.emptyAppointments} alt="Empty calendar" title="Appointment not available" body="Log in with the account that booked it, or book a new visit." action={<Button onClick={() => go.push("/login")}>Log In</Button>} />
+        <EmptyState image={images.emptyAppointments} alt="Empty calendar" title="Appointment not available" body="This visit is not saved on this device." action={<Button onClick={() => go.push("/appointments")}>View appointments</Button>} />
       </ScreenContainer>
     );
   }
