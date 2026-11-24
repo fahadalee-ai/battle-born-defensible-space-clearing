@@ -83,7 +83,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
     vv?.addEventListener("resize", onVV);
     vv?.addEventListener("scroll", onVV);
     const android = /Android/i.test(navigator.userAgent);
-    document.documentElement.style.setProperty("--status-h", android ? "24px" : "max(47px, env(safe-area-inset-top))");
+    document.documentElement.style.setProperty("--status-h", android ? "0px" : "env(safe-area-inset-top)");
     return () => {
       window.removeEventListener("online", sync);
       window.removeEventListener("offline", sync);

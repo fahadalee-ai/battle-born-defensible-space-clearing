@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useRouter } from "@tanstack/react-router";
-import { BatteryFull, Bell, CalendarDays, CalendarPlus, ChevronLeft, House, Signal, TreePine, UserRound, Wifi } from "lucide-react";
+import { Bell, CalendarDays, CalendarPlus, ChevronLeft, House, TreePine, UserRound } from "lucide-react";
 import logoUrl from "@/img/logo.png";
 import { markPop, markPush } from "@/components/native/portal";
 import { IconButton } from "@/components/native/ui";
@@ -51,35 +51,10 @@ export function useGo() {
   );
 }
 
-function useClock() {
-  const [time, setTime] = useState("");
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
-    tick();
-    const id = window.setInterval(tick, 15000);
-    return () => window.clearInterval(id);
-  }, []);
-  return time;
-}
-
-export function StatusBar({ light = false }: { light?: boolean }) {
-  const time = useClock();
-  return (
-    <div className={`status ${light ? "light" : ""}`}>
-      <span className="status-time">{time}</span>
-      <span className="status-icons" aria-hidden>
-        <Signal size={16} strokeWidth={2} />
-        <Wifi size={16} strokeWidth={2} />
-        <BatteryFull size={18} strokeWidth={2} />
-      </span>
-    </div>
-  );
-}
-
 export function BackButton({ label, onPress }: { label?: string; onPress: () => void }) {
   return (
     <button type="button" className="back-btn press" onClick={onPress} aria-label={label ? `Back to ${label}` : "Back"}>
-      <ChevronLeft size={22} strokeWidth={2.25} />
+      <ChevronLeft size={28} strokeWidth={2.5} />
       {label ? <span>{label}</span> : null}
     </button>
   );
@@ -91,24 +66,19 @@ export function AppHeader({
   back,
   onBack,
   right,
-  light,
 }: {
   title?: string;
   showTitle?: boolean;
   back?: boolean;
   onBack?: () => void;
   right?: ReactNode;
-  light?: boolean;
 }) {
   return (
-    <>
-      <StatusBar light={light} />
-      <div className="nav">
-        <div className="nav-side">{back && onBack ? <BackButton onPress={onBack} /> : null}</div>
-        <div className={`nav-title ${showTitle ? "" : "hidden"}`}>{title}</div>
-        <div className="nav-side" style={{ justifyContent: "flex-end" }}>{right}</div>
-      </div>
-    </>
+    <div className="nav">
+      <div className="nav-side">{back && onBack ? <BackButton onPress={onBack} /> : null}</div>
+      <div className={`nav-title ${showTitle ? "" : "hidden"}`}>{title}</div>
+      <div className="nav-side" style={{ justifyContent: "flex-end" }}>{right}</div>
+    </div>
   );
 }
 
@@ -167,7 +137,6 @@ export function ScreenContainer({
   tone = "default",
   chrome = true,
   overlay = false,
-  statusLight = false,
   showNavTitle = true,
   onRefresh,
   children,
@@ -242,13 +211,9 @@ export function ScreenContainer({
         setDragX(0);
       }}
     >
-      {chrome || overlay ? (
-        <header className={`screen-head ${standardBar || scrolled ? "scrolled" : ""} ${overlay || !chrome ? "overlay" : ""}`}>
-          {chrome ? (
-            <AppHeader title={title} showTitle={showNavTitle && showInline} back={back} onBack={handleBack} right={right} light={statusLight || tone === "brand"} />
-          ) : (
-            <StatusBar light={statusLight || tone === "brand"} />
-          )}
+      {chrome ? (
+        <header className={`screen-head ${standardBar || scrolled ? "scrolled" : ""} ${overlay ? "overlay" : ""}`}>
+          <AppHeader title={title} showTitle={showNavTitle && showInline} back={back} onBack={handleBack} right={right} />
         </header>
       ) : null}
       <div
